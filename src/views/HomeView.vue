@@ -2,70 +2,68 @@
   <div class="container mt-5">
     <h1 class="text-center mb-4">To-Do List estilo Trello</h1>
 
+    <!-- Botón para mostrar/ocultar formulario -->
+    <div class="text-center mb-3">
+      <button class="btn btn-primary" @click="toggleFormulario">
+        {{ mostrarFormulario ? "Ocultar formulario" : "Nueva tarea" }}
+      </button>
+    </div>
+
+    <!-- Filtro de prioridades -->
+    <div class="mb-4 d-flex justify-content-center">
+      <div style="max-width: 600px; width: 100%;">
+        <multiselect
+          v-model="filtroPrioridades"
+          :options="opcionesPrioridad"
+          :multiple="true"
+          placeholder="Filtrar por prioridad"
+        />
+      </div>
+    </div>
+
+    <!-- Formulario para agregar tareas -->
+    <div v-if="mostrarFormulario" class="mb-4 d-flex justify-content-center">
+      <div style="max-width: 600px; width: 100%;">
+        <div class="input-group mb-2">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Nombre de la tarea"
+            v-model="nuevaTarea.texto"
+          />
+        </div>
+        <div class="input-group mb-2">
+          <input
+            type="date"
+            class="form-control"
+            v-model="nuevaTarea.fecha"
+          />
+        </div>
+        <div class="input-group mb-2">
+          <input
+            type="time"
+            class="form-control"
+            v-model="nuevaTarea.hora"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <select class="form-select" v-model="nuevaTarea.prioridad">
+            <option value="" disabled>Selecciona una prioridad</option>
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+        <button class="btn btn-success w-100" @click="agregarTarea">Agregar Tarea</button>
+      </div>
+    </div>
+
     <!-- Tres columnas -->
     <div class="row">
-      <div class="col-md-4">
+      <div class="col-md-4" v-for="columna in ['To Do', 'Doing', 'Done']" :key="columna">
         <h3 class="text-center">
-          To Do <span class="badge bg-secondary">{{ tareasPorColumna['To Do'].length }}</span>
+          {{ columna }} <span class="badge bg-secondary">{{ tareasFiltradasPorColumna[columna].length }}</span>
         </h3>
-        <!-- Input para agregar tareas -->
-        <div class="input-group mb-3">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Nueva tarea"
-            v-model="nuevaTarea['To Do']"
-          />
-          <button class="btn btn-primary" @click="agregarTarea('To Do')">Agregar</button>
-        </div>
-        <!-- Tareas -->
-        <div
-          class="p-3 bg-light border"
-          @dragover.prevent
-          @drop="moverTarea('To Do')"
-        >
-          <div
-            class="card mb-2"
-            v-for="(tarea, index) in tareasPorColumna['To Do']"
-            :key="tarea.id"
-            draggable="true"
-            @dragstart="arrastrarTarea(tarea)"
-          >
-            <div class="card-body d-flex justify-content-between align-items-center">
-              <div>
-                <span v-if="!tarea.editando" @dblclick="editarTarea(tarea)">
-                  {{ tarea.texto }}
-                </span>
-                <input
-                  v-else
-                  type="text"
-                  class="form-control"
-                  v-model="tarea.texto"
-                  @blur="terminarEdicion(tarea)"
-                />
-              </div>
-              <button class="btn btn-danger btn-sm" @click="eliminarTarea(tarea.id)">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Repite para Doing y Done -->
-      <div class="col-md-4" v-for="columna in ['Doing', 'Done']" :key="columna">
-        <h3 class="text-center">
-          {{ columna }} <span class="badge bg-secondary">{{ tareasPorColumna[columna].length }}</span>
-        </h3>
-        <div class="input-group mb-3">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Nueva tarea"
-            v-model="nuevaTarea[columna]"
-          />
-          <button class="btn btn-primary" @click="agregarTarea(columna)">Agregar</button>
-        </div>
         <div
           class="p-3 bg-light border"
           @dragover.prevent
@@ -73,27 +71,65 @@
         >
           <div
             class="card mb-2"
-            v-for="(tarea, index) in tareasPorColumna[columna]"
+            v-for="(tarea, index) in tareasFiltradasPorColumna[columna]"
             :key="tarea.id"
             draggable="true"
             @dragstart="arrastrarTarea(tarea)"
           >
-            <div class="card-body d-flex justify-content-between align-items-center">
-              <div>
-                <span v-if="!tarea.editando" @dblclick="editarTarea(tarea)">
-                  {{ tarea.texto }}
-                </span>
-                <input
-                  v-else
-                  type="text"
-                  class="form-control"
-                  v-model="tarea.texto"
-                  @blur="terminarEdicion(tarea)"
-                />
+            <div class="card-body">
+              <h5 class="card-title d-flex align-items-center">
+                {{ tarea.texto }}
+                <i
+                  class="ms-2"
+                  :class="iconoPrioridad(tarea.prioridad)"
+                  :title="`Prioridad: ${tarea.prioridad}`"
+                ></i>
+              </h5>
+              <p class="card-text">
+                Fecha: {{ tarea.fecha }} <br />
+                Hora: {{ tarea.hora }}
+              </p>
+              <div v-if="tarea.mostrarDetalles" class="alert alert-info p-2">
+                Creada el: {{ tarea.fechaCreacion }}
               </div>
-              <button class="btn btn-danger btn-sm" @click="eliminarTarea(tarea.id)">
-                <i class="bi bi-trash"></i>
-              </button>
+              <div class="d-flex justify-content-between">
+                <button
+                  class="btn btn-info btn-sm"
+                  @click="alternarDetalles(tarea)"
+                >
+                  <i :class="tarea.mostrarDetalles ? 'bi bi-dash' : 'bi bi-plus'"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" @click="editarTarea(tarea)">
+                  Editar
+                </button>
+                <button class="btn btn-danger btn-sm" @click="eliminarTarea(tarea.id)">
+                  Eliminar
+                </button>
+              </div>
+              <div v-if="tarea.editando">
+                <input
+                  type="text"
+                  class="form-control my-2"
+                  v-model="tarea.texto"
+                  placeholder="Nombre de la tarea"
+                />
+                <input
+                  type="date"
+                  class="form-control my-2"
+                  v-model="tarea.fecha"
+                />
+                <input
+                  type="time"
+                  class="form-control my-2"
+                  v-model="tarea.hora"
+                />
+                <select class="form-select my-2" v-model="tarea.prioridad">
+                  <option value="Alta">Alta</option>
+                  <option value="Media">Media</option>
+                  <option value="Baja">Baja</option>
+                </select>
+                <button class="btn btn-success btn-sm" @click="guardarEdicion(tarea)">Guardar</button>
+              </div>
             </div>
           </div>
         </div>
@@ -103,16 +139,26 @@
 </template>
 
 <script>
+import Multiselect from "vue-multiselect";
+import "vue-multiselect/dist/vue-multiselect.min.css";
+
 export default {
   name: "HomeView",
+  components: {
+    Multiselect,
+  },
   data() {
     return {
-      tareas: JSON.parse(localStorage.getItem("tareas")) || [
-        { id: 1, texto: "Tarea 1", columna: "To Do", editando: false },
-        { id: 2, texto: "Tarea 2", columna: "Doing", editando: false },
-        { id: 3, texto: "Tarea 3", columna: "Done", editando: false },
-      ],
-      nuevaTarea: { "To Do": "", Doing: "", Done: "" },
+      tareas: JSON.parse(localStorage.getItem("tareas")) || [],
+      nuevaTarea: {
+        texto: "",
+        fecha: "",
+        hora: "",
+        prioridad: "",
+      },
+      filtroPrioridades: [],
+      opcionesPrioridad: ["Alta", "Media", "Baja"],
+      mostrarFormulario: false,
       tareaArrastrada: null,
     };
   },
@@ -124,29 +170,77 @@ export default {
         Done: this.tareas.filter((tarea) => tarea.columna === "Done"),
       };
     },
+    tareasFiltradasPorColumna() {
+      if (this.filtroPrioridades.length === 0) {
+        return this.tareasPorColumna;
+      }
+      return {
+        "To Do": this.tareasPorColumna["To Do"].filter((tarea) =>
+          this.filtroPrioridades.includes(tarea.prioridad)
+        ),
+        Doing: this.tareasPorColumna["Doing"].filter((tarea) =>
+          this.filtroPrioridades.includes(tarea.prioridad)
+        ),
+        Done: this.tareasPorColumna["Done"].filter((tarea) =>
+          this.filtroPrioridades.includes(tarea.prioridad)
+        ),
+      };
+    },
   },
   methods: {
-    agregarTarea(columna) {
-      if (this.nuevaTarea[columna].trim() !== "") {
+    toggleFormulario() {
+      this.mostrarFormulario = !this.mostrarFormulario;
+    },
+    agregarTarea() {
+      if (
+        this.nuevaTarea.texto.trim() !== "" &&
+        this.nuevaTarea.fecha &&
+        this.nuevaTarea.hora &&
+        this.nuevaTarea.prioridad
+      ) {
+        const fechaCreacion = new Date().toLocaleString();
         this.tareas.push({
           id: Date.now(),
-          texto: this.nuevaTarea[columna],
-          columna,
+          ...this.nuevaTarea,
+          fechaCreacion,
+          mostrarDetalles: false,
           editando: false,
+          columna: "To Do",
         });
-        this.nuevaTarea[columna] = "";
+        this.nuevaTarea = {
+          texto: "",
+          fecha: "",
+          hora: "",
+          prioridad: "",
+        };
+        this.mostrarFormulario = false; // Oculta el formulario al agregar la tarea
         this.guardarTareas();
       }
     },
-    eliminarTarea(id) {
-      this.tareas = this.tareas.filter((tarea) => tarea.id !== id);
-      this.guardarTareas();
+    iconoPrioridad(prioridad) {
+      switch (prioridad) {
+        case "Alta":
+          return "bi bi-fire text-danger";
+        case "Media":
+          return "bi bi-lightning-fill text-warning";
+        case "Baja":
+          return "bi bi-cup-hot text-success";
+        default:
+          return "";
+      }
+    },
+    alternarDetalles(tarea) {
+      tarea.mostrarDetalles = !tarea.mostrarDetalles;
     },
     editarTarea(tarea) {
       tarea.editando = true;
     },
-    terminarEdicion(tarea) {
+    guardarEdicion(tarea) {
       tarea.editando = false;
+      this.guardarTareas();
+    },
+    eliminarTarea(id) {
+      this.tareas = this.tareas.filter((tarea) => tarea.id !== id);
       this.guardarTareas();
     },
     arrastrarTarea(tarea) {
