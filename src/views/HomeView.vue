@@ -1,132 +1,176 @@
-<script setup>
-</script>
-
 <template>
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">To-Do List estilo Trello</h1>
 
-  <main>
-    <div class="container">
-
-      <h1>Bootstrap grid examples</h1>
-      <p class="lead">Basic grid layouts to get you familiar with building within the Bootstrap grid system.</p>
-
-      <h3>Five grid tiers</h3>
-      <p>There are five tiers to the Bootstrap grid system, one for each range of devices we support. Each tier starts
-        at a minimum viewport size and automatically applies to the larger devices unless overridden.</p>
-
-      <div class="row">
-        <div class="col-4">.col-4</div>
-        <div class="col-4">.col-4</div>
-        <div class="col-4">.col-4</div>
-      </div>
-
-      <div class="row">
-        <div class="col-sm-4">.col-sm-4</div>
-        <div class="col-sm-4">.col-sm-4</div>
-        <div class="col-sm-4">.col-sm-4</div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-4">.col-md-4</div>
-        <div class="col-md-4">.col-md-4</div>
-        <div class="col-md-4">.col-md-4</div>
-      </div>
-
-      <div class="row">
-        <div class="col-lg-4">.col-lg-4</div>
-        <div class="col-lg-4">.col-lg-4</div>
-        <div class="col-lg-4">.col-lg-4</div>
-      </div>
-
-      <div class="row">
-        <div class="col-xl-4">.col-xl-4</div>
-        <div class="col-xl-4">.col-xl-4</div>
-        <div class="col-xl-4">.col-xl-4</div>
-      </div>
-
-      <h3>Three equal columns</h3>
-      <p>Get three equal-width columns <strong>starting at desktops and scaling to large desktops</strong>. On mobile
-        devices, tablets and below, the columns will automatically stack.</p>
-      <div class="row">
-        <div class="col-md-4">.col-md-4</div>
-        <div class="col-md-4">.col-md-4</div>
-        <div class="col-md-4">.col-md-4</div>
-      </div>
-
-      <h3>Three unequal columns</h3>
-      <p>Get three columns <strong>starting at desktops and scaling to large desktops</strong> of various widths.
-        Remember, grid columns should add up to twelve for a single horizontal block. More than that, and columns start
-        stacking no matter the viewport.</p>
-      <div class="row">
-        <div class="col-md-3">.col-md-3</div>
-        <div class="col-md-6">.col-md-6</div>
-        <div class="col-md-3">.col-md-3</div>
-      </div>
-
-      <h3>Two columns</h3>
-      <p>Get two columns <strong>starting at desktops and scaling to large desktops</strong>.</p>
-      <div class="row">
-        <div class="col-md-8">.col-md-8</div>
-        <div class="col-md-4">.col-md-4</div>
-      </div>
-
-      <h3>Full width, single column</h3>
-      <p class="text-warning">No grid classes are necessary for full-width elements.</p>
-
-      <hr>
-
-      <h3>Two columns with two nested columns</h3>
-      <p>Per the documentation, nesting is easy—just put a row of columns within an existing column. This gives you two
-        columns <strong>starting at desktops and scaling to large desktops</strong>, with another two (equal widths)
-        within the larger column.</p>
-      <p>At mobile device sizes, tablets and down, these columns and their nested columns will stack.</p>
-      <div class="row">
-        <div class="col-md-8">
-          .col-md-8
-          <div class="row">
-            <div class="col-md-6">.col-md-6</div>
-            <div class="col-md-6">.col-md-6</div>
+    <!-- Tres columnas -->
+    <div class="row">
+      <div class="col-md-4">
+        <h3 class="text-center">
+          To Do <span class="badge bg-secondary">{{ tareasPorColumna['To Do'].length }}</span>
+        </h3>
+        <!-- Input para agregar tareas -->
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Nueva tarea"
+            v-model="nuevaTarea['To Do']"
+          />
+          <button class="btn btn-primary" @click="agregarTarea('To Do')">Agregar</button>
+        </div>
+        <!-- Tareas -->
+        <div
+          class="p-3 bg-light border"
+          @dragover.prevent
+          @drop="moverTarea('To Do')"
+        >
+          <div
+            class="card mb-2"
+            v-for="(tarea, index) in tareasPorColumna['To Do']"
+            :key="tarea.id"
+            draggable="true"
+            @dragstart="arrastrarTarea(tarea)"
+          >
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <span v-if="!tarea.editando" @dblclick="editarTarea(tarea)">
+                  {{ tarea.texto }}
+                </span>
+                <input
+                  v-else
+                  type="text"
+                  class="form-control"
+                  v-model="tarea.texto"
+                  @blur="terminarEdicion(tarea)"
+                />
+              </div>
+              <button class="btn btn-danger btn-sm" @click="eliminarTarea(tarea.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
-        <div class="col-md-4">.col-md-4</div>
       </div>
 
-      <hr>
-
-      <h3>Mixed: mobile and desktop</h3>
-      <p>The Bootstrap v4 grid system has five tiers of classes: xs (extra small), sm (small), md (medium), lg (large),
-        and xl (extra large). You can use nearly any combination of these classes to create more dynamic and flexible
-        layouts.</p>
-      <p>Each tier of classes scales up, meaning if you plan on setting the same widths for xs and sm, you only need to
-        specify xs.</p>
-      <div class="row">
-        <div class="col-12 col-md-8">.col-12 .col-md-8</div>
-        <div class="col-6 col-md-4">.col-6 .col-md-4</div>
+      <!-- Repite para Doing y Done -->
+      <div class="col-md-4" v-for="columna in ['Doing', 'Done']" :key="columna">
+        <h3 class="text-center">
+          {{ columna }} <span class="badge bg-secondary">{{ tareasPorColumna[columna].length }}</span>
+        </h3>
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Nueva tarea"
+            v-model="nuevaTarea[columna]"
+          />
+          <button class="btn btn-primary" @click="agregarTarea(columna)">Agregar</button>
+        </div>
+        <div
+          class="p-3 bg-light border"
+          @dragover.prevent
+          @drop="moverTarea(columna)"
+        >
+          <div
+            class="card mb-2"
+            v-for="(tarea, index) in tareasPorColumna[columna]"
+            :key="tarea.id"
+            draggable="true"
+            @dragstart="arrastrarTarea(tarea)"
+          >
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <span v-if="!tarea.editando" @dblclick="editarTarea(tarea)">
+                  {{ tarea.texto }}
+                </span>
+                <input
+                  v-else
+                  type="text"
+                  class="form-control"
+                  v-model="tarea.texto"
+                  @blur="terminarEdicion(tarea)"
+                />
+              </div>
+              <button class="btn btn-danger btn-sm" @click="eliminarTarea(tarea.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="row">
-        <div class="col-6 col-md-4">.col-6 .col-md-4</div>
-        <div class="col-6 col-md-4">.col-6 .col-md-4</div>
-        <div class="col-6 col-md-4">.col-6 .col-md-4</div>
-      </div>
-      <div class="row">
-        <div class="col-6">.col-6</div>
-        <div class="col-6">.col-6</div>
-      </div>
-
-      <hr>
-
-      <h3>Mixed: mobile, tablet, and desktop</h3>
-      <p></p>
-      <div class="row">
-        <div class="col-12 col-sm-6 col-lg-8">.col-12 .col-sm-6 .col-lg-8</div>
-        <div class="col-6 col-lg-4">.col-6 .col-lg-4</div>
-      </div>
-      <div class="row">
-        <div class="col-6 col-sm-4">.col-6 .col-sm-4</div>
-        <div class="col-6 col-sm-4">.col-6 .col-sm-4</div>
-        <div class="col-6 col-sm-4">.col-6 .col-sm-4</div>
-      </div>
-
     </div>
-  </main>
-
+  </div>
 </template>
+
+<script>
+export default {
+  name: "HomeView",
+  data() {
+    return {
+      tareas: JSON.parse(localStorage.getItem("tareas")) || [
+        { id: 1, texto: "Tarea 1", columna: "To Do", editando: false },
+        { id: 2, texto: "Tarea 2", columna: "Doing", editando: false },
+        { id: 3, texto: "Tarea 3", columna: "Done", editando: false },
+      ],
+      nuevaTarea: { "To Do": "", Doing: "", Done: "" },
+      tareaArrastrada: null,
+    };
+  },
+  computed: {
+    tareasPorColumna() {
+      return {
+        "To Do": this.tareas.filter((tarea) => tarea.columna === "To Do"),
+        Doing: this.tareas.filter((tarea) => tarea.columna === "Doing"),
+        Done: this.tareas.filter((tarea) => tarea.columna === "Done"),
+      };
+    },
+  },
+  methods: {
+    agregarTarea(columna) {
+      if (this.nuevaTarea[columna].trim() !== "") {
+        this.tareas.push({
+          id: Date.now(),
+          texto: this.nuevaTarea[columna],
+          columna,
+          editando: false,
+        });
+        this.nuevaTarea[columna] = "";
+        this.guardarTareas();
+      }
+    },
+    eliminarTarea(id) {
+      this.tareas = this.tareas.filter((tarea) => tarea.id !== id);
+      this.guardarTareas();
+    },
+    editarTarea(tarea) {
+      tarea.editando = true;
+    },
+    terminarEdicion(tarea) {
+      tarea.editando = false;
+      this.guardarTareas();
+    },
+    arrastrarTarea(tarea) {
+      this.tareaArrastrada = tarea;
+    },
+    moverTarea(nuevaColumna) {
+      if (this.tareaArrastrada) {
+        this.tareaArrastrada.columna = nuevaColumna;
+        this.tareaArrastrada = null;
+        this.guardarTareas();
+      }
+    },
+    guardarTareas() {
+      localStorage.setItem("tareas", JSON.stringify(this.tareas));
+    },
+  },
+};
+</script>
+
+<style>
+.card {
+  cursor: grab;
+}
+.card:active {
+  cursor: grabbing;
+}
+</style>
