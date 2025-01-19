@@ -10,7 +10,7 @@
     </div>
 
     <!-- Filtro de prioridades -->
-    <div class="mb-4 d-flex justify-content-center">
+    <div :class="{ hidden: mostrarFormulario }" class="mb-4 d-flex justify-content-center">
       <div style="max-width: 600px; width: 100%;">
         <multiselect
           v-model="filtroPrioridades"
@@ -21,114 +21,148 @@
       </div>
     </div>
 
-    <!-- Formulario para agregar tareas -->
-    <div v-if="mostrarFormulario" class="mb-4 d-flex justify-content-center">
-      <div style="max-width: 600px; width: 100%;">
-        <div class="input-group mb-2">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Nombre de la tarea"
-            v-model="nuevaTarea.texto"
-          />
+    <!-- Formulario para agregar tareas con animación -->
+    <transition name="slide">
+      <div v-if="mostrarFormulario" class="mb-4 d-flex justify-content-center">
+        <div style="max-width: 600px; width: 100%;">
+          <div class="input-group mb-2">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Nombre de la tarea"
+              v-model="nuevaTarea.texto"
+            />
+          </div>
+          <div class="input-group mb-2">
+            <input
+              type="date"
+              class="form-control"
+              v-model="nuevaTarea.fecha"
+            />
+          </div>
+          <div class="input-group mb-2">
+            <input
+              type="time"
+              class="form-control"
+              v-model="nuevaTarea.hora"
+            />
+          </div>
+          <div class="input-group mb-3">
+            <select class="form-select" v-model="nuevaTarea.prioridad">
+              <option value="" disabled>Selecciona una prioridad</option>
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+          <button class="btn btn-success w-100" @click="agregarTarea">Agregar Tarea</button>
         </div>
-        <div class="input-group mb-2">
-          <input
-            type="date"
-            class="form-control"
-            v-model="nuevaTarea.fecha"
-          />
-        </div>
-        <div class="input-group mb-2">
-          <input
-            type="time"
-            class="form-control"
-            v-model="nuevaTarea.hora"
-          />
-        </div>
-        <div class="input-group mb-3">
-          <select class="form-select" v-model="nuevaTarea.prioridad">
-            <option value="" disabled>Selecciona una prioridad</option>
-            <option value="Alta">Alta</option>
-            <option value="Media">Media</option>
-            <option value="Baja">Baja</option>
-          </select>
-        </div>
-        <button class="btn btn-success w-100" @click="agregarTarea">Agregar Tarea</button>
       </div>
-    </div>
+    </transition>
 
     <!-- Tres columnas -->
     <div class="row">
-      <div class="col-md-4" v-for="columna in ['To Do', 'Doing', 'Done']" :key="columna">
+      <div
+        class="col-md-4"
+        v-for="columna in ['To Do', 'Doing', 'Done']"
+        :key="columna"
+      >
         <h3 class="text-center">
           {{ columna }} <span class="badge bg-secondary">{{ tareasFiltradasPorColumna[columna].length }}</span>
         </h3>
         <div
-          class="p-3 bg-light border"
-          @dragover.prevent
+          class="p-3 bg-light border position-relative"
+          @dragover.prevent="permitirArrastre"
           @drop="moverTarea(columna)"
         >
+          <!-- Texto "Arrastrar aquí" -->
+          <div
+            v-if="tareaArrastrada && tareaArrastrada.columna !== columna"
+            class="p-3 text-center text-muted border border-primary rounded mb-2"
+            style="height: 80px; display: flex; align-items: center; justify-content: center;"
+          >
+            Arrastrar aquí
+          </div>
+
+          <!-- Mensaje de columna vacía -->
+          <div
+            v-if="!tareaArrastrada && tareasFiltradasPorColumna[columna].length === 0"
+            class="text-center text-muted p-3"
+            style="border: 2px dashed #ccc; border-radius: 5px;"
+          >
+            No hay tareas en esta columna
+          </div>
+
+          <!-- Tareas -->
           <div
             class="card mb-2"
             v-for="(tarea, index) in tareasFiltradasPorColumna[columna]"
             :key="tarea.id"
             draggable="true"
             @dragstart="arrastrarTarea(tarea)"
+            @dragend="finalizarArrastre"
           >
             <div class="card-body">
-              <h5 class="card-title d-flex align-items-center">
-                {{ tarea.texto }}
-                <i
-                  class="ms-2"
-                  :class="iconoPrioridad(tarea.prioridad)"
-                  :title="`Prioridad: ${tarea.prioridad}`"
-                ></i>
-              </h5>
-              <p class="card-text">
-                Fecha: {{ tarea.fecha }} <br />
-                Hora: {{ tarea.hora }}
-              </p>
-              <div v-if="tarea.mostrarDetalles" class="alert alert-info p-2">
-                Creada el: {{ tarea.fechaCreacion }}
-              </div>
-              <div class="d-flex justify-content-between">
-                <button
-                  class="btn btn-info btn-sm"
-                  @click="alternarDetalles(tarea)"
-                >
-                  <i :class="tarea.mostrarDetalles ? 'bi bi-dash' : 'bi bi-plus'"></i>
-                </button>
-                <button class="btn btn-warning btn-sm" @click="editarTarea(tarea)">
-                  Editar
-                </button>
-                <button class="btn btn-danger btn-sm" @click="eliminarTarea(tarea.id)">
-                  Eliminar
-                </button>
-              </div>
+              <!-- Modo edición -->
               <div v-if="tarea.editando">
                 <input
                   type="text"
                   class="form-control my-2"
-                  v-model="tarea.texto"
+                  v-model="tareaTemporal.texto"
                   placeholder="Nombre de la tarea"
                 />
                 <input
                   type="date"
                   class="form-control my-2"
-                  v-model="tarea.fecha"
+                  v-model="tareaTemporal.fecha"
                 />
                 <input
                   type="time"
                   class="form-control my-2"
-                  v-model="tarea.hora"
+                  v-model="tareaTemporal.hora"
                 />
-                <select class="form-select my-2" v-model="tarea.prioridad">
+                <select class="form-select my-2" v-model="tareaTemporal.prioridad">
                   <option value="Alta">Alta</option>
                   <option value="Media">Media</option>
                   <option value="Baja">Baja</option>
                 </select>
-                <button class="btn btn-success btn-sm" @click="guardarEdicion(tarea)">Guardar</button>
+                <div class="d-flex justify-content-between mt-3">
+                  <button class="btn btn-success btn-sm" @click="guardarCambios(tarea)">Guardar cambios</button>
+                  <button class="btn btn-secondary btn-sm" @click="cancelarCambios(tarea)">Cancelar cambios</button>
+                </div>
+              </div>
+
+              <!-- Vista normal -->
+              <div v-else>
+                <h5 class="card-title d-flex align-items-center">
+                  {{ tarea.texto }}
+                  <i
+                    class="ms-2"
+                    :class="iconoPrioridad(tarea.prioridad)"
+                    :title="`Prioridad: ${tarea.prioridad}`"
+                  ></i>
+                </h5>
+                <p class="card-text">
+                  Fecha: {{ tarea.fecha }} <br />
+                  Hora: {{ tarea.hora }}
+                </p>
+                <div v-if="tarea.mostrarDetalles" class="alert alert-info p-2">
+                  Creada el: {{ tarea.fechaCreacion }}
+                </div>
+                <div class="d-flex justify-content-between">
+                  <button
+                    class="btn btn-info btn-sm"
+                    @click="alternarDetalles(tarea)"
+                  >
+                    <i :class="tarea.mostrarDetalles ? 'bi bi-dash' : 'bi bi-plus'"></i>
+                  </button>
+                  <button class="btn btn-warning btn-sm" @click="activarEdicion(tarea)">
+                    Editar
+                  </button>
+                  <button class="btn btn-danger btn-sm" @click="eliminarTarea(tarea.id)">
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -149,8 +183,18 @@ export default {
   },
   data() {
     return {
-      tareas: JSON.parse(localStorage.getItem("tareas")) || [],
+      // Asegurarse de que `editando` sea false para todas las tareas cargadas
+      tareas: JSON.parse(localStorage.getItem("tareas"))?.map((tarea) => ({
+        ...tarea,
+        editando: false,
+      })) || [],
       nuevaTarea: {
+        texto: "",
+        fecha: "",
+        hora: "",
+        prioridad: "",
+      },
+      tareaTemporal: {
         texto: "",
         fecha: "",
         hora: "",
@@ -204,7 +248,7 @@ export default {
           ...this.nuevaTarea,
           fechaCreacion,
           mostrarDetalles: false,
-          editando: false,
+          editando: false, // Asegurar que la tarea no esté en modo edición
           columna: "To Do",
         });
         this.nuevaTarea = {
@@ -232,12 +276,20 @@ export default {
     alternarDetalles(tarea) {
       tarea.mostrarDetalles = !tarea.mostrarDetalles;
     },
-    editarTarea(tarea) {
-      tarea.editando = true;
+    activarEdicion(tarea) {
+      // Crear una copia de la tarea para editar
+      this.tareaTemporal = { ...tarea };
+      tarea.editando = true; // Activar el modo edición
     },
-    guardarEdicion(tarea) {
-      tarea.editando = false;
+    guardarCambios(tarea) {
+      // Aplicar los cambios de `tareaTemporal` a la tarea original
+      Object.assign(tarea, this.tareaTemporal);
+      tarea.editando = false; // Salir del modo edición
       this.guardarTareas();
+    },
+    cancelarCambios(tarea) {
+      // Cancelar cambios y salir del modo edición
+      tarea.editando = false;
     },
     eliminarTarea(id) {
       this.tareas = this.tareas.filter((tarea) => tarea.id !== id);
@@ -246,19 +298,31 @@ export default {
     arrastrarTarea(tarea) {
       this.tareaArrastrada = tarea;
     },
+    finalizarArrastre() {
+      this.tareaArrastrada = null;
+    },
+    permitirArrastre(event) {
+      event.preventDefault();
+    },
     moverTarea(nuevaColumna) {
       if (this.tareaArrastrada) {
         this.tareaArrastrada.columna = nuevaColumna;
-        this.tareaArrastrada = null;
+        this.finalizarArrastre();
         this.guardarTareas();
       }
     },
     guardarTareas() {
-      localStorage.setItem("tareas", JSON.stringify(this.tareas));
+      // Antes de guardar, eliminamos `editando` para evitar guardar estados temporales
+      const tareasSinEditando = this.tareas.map((tarea) => ({
+        ...tarea,
+        editando: false,
+      }));
+      localStorage.setItem("tareas", JSON.stringify(tareasSinEditando));
     },
   },
 };
 </script>
+
 
 <style>
 .card {
@@ -266,5 +330,17 @@ export default {
 }
 .card:active {
   cursor: grabbing;
+}
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.5s ease;
+}
+.slide-enter-from,
+.slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+.hidden {
+  display: none !important;
 }
 </style>
