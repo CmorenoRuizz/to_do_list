@@ -2,8 +2,13 @@
   <div class="container mt-5">
     <h1 class="text-center mb-4">To-Do List estilo Trello</h1>
 
-    <!-- Botón para mostrar/ocultar formulario -->
-    <div class="text-center mb-3">
+    <div class="d-flex justify-content-center gap-2 mb-3">
+      <!-- Botón para alternar modo oscuro -->
+      <button class="btn btn-secondary" @click="toggleDarkMode">
+        {{ modoOscuro ? "Modo Claro" : "Modo Oscuro" }}
+      </button>
+
+      <!-- Botón para mostrar/ocultar formulario -->
       <button class="btn btn-primary" @click="toggleFormulario">
         {{ mostrarFormulario ? "Ocultar formulario" : "Nueva tarea" }}
       </button>
@@ -204,7 +209,14 @@ export default {
       opcionesPrioridad: ["Alta", "Media", "Baja"],
       mostrarFormulario: false,
       tareaArrastrada: null,
+      modoOscuro: JSON.parse(localStorage.getItem('modoOscuro')) || false,
     };
+  },
+  created() {
+    // Aplicar el modo oscuro al cargar la página si estaba activo
+    if (this.modoOscuro) {
+      document.body.classList.add('bg-dark', 'text-white');
+    }
   },
   computed: {
     tareasPorColumna() {
@@ -234,6 +246,15 @@ export default {
   methods: {
     toggleFormulario() {
       this.mostrarFormulario = !this.mostrarFormulario;
+    },
+    toggleDarkMode() {
+      this.modoOscuro = !this.modoOscuro;
+      localStorage.setItem('modoOscuro', this.modoOscuro);
+      if (this.modoOscuro) {
+        document.body.classList.add('bg-dark', 'text-white');
+      } else {
+        document.body.classList.remove('bg-dark', 'text-white');
+      }
     },
     agregarTarea() {
       if (
