@@ -1,6 +1,6 @@
 <template>
   <div class="container mt-5">
-    <h1 class="text-center mb-4">To-Do List estilo Trello</h1>
+    <h1 class="text-center mb-4">Lista de tareas pendientes</h1>
 
     <div class="d-flex justify-content-center gap-2 mb-3">
       <!-- Botón para alternar modo oscuro -->
@@ -69,7 +69,7 @@
     <div class="row">
       <div
         class="col-md-4"
-        v-for="columna in ['To Do', 'Doing', 'Done']"
+        v-for="columna in ['Por hacer', 'En proceso', 'Completado']"
         :key="columna"
       >
         <h3 class="text-center">
@@ -101,7 +101,7 @@
           <!-- Tareas -->
           <div
             class="card mb-2"
-            v-for="(tarea, index) in tareasFiltradasPorColumna[columna]"
+            v-for="tarea in tareasFiltradasPorColumna[columna]"
             :key="tarea.id"
             draggable="true"
             @dragstart="arrastrarTarea(tarea)"
@@ -221,9 +221,9 @@ export default {
   computed: {
     tareasPorColumna() {
       return {
-        "To Do": this.tareas.filter((tarea) => tarea.columna === "To Do"),
-        Doing: this.tareas.filter((tarea) => tarea.columna === "Doing"),
-        Done: this.tareas.filter((tarea) => tarea.columna === "Done"),
+        "Por hacer": this.tareas.filter((tarea) => tarea.columna === "Por hacer"),
+        "En proceso": this.tareas.filter((tarea) => tarea.columna === "En proceso"),
+        "Completado": this.tareas.filter((tarea) => tarea.columna === "Completado"),
       };
     },
     tareasFiltradasPorColumna() {
@@ -231,13 +231,13 @@ export default {
         return this.tareasPorColumna;
       }
       return {
-        "To Do": this.tareasPorColumna["To Do"].filter((tarea) =>
+        "Por hacer": this.tareasPorColumna["Por hacer"].filter((tarea) =>
           this.filtroPrioridades.includes(tarea.prioridad)
         ),
-        Doing: this.tareasPorColumna["Doing"].filter((tarea) =>
+        "En proceso": this.tareasPorColumna["En proceso"].filter((tarea) =>
           this.filtroPrioridades.includes(tarea.prioridad)
         ),
-        Done: this.tareasPorColumna["Done"].filter((tarea) =>
+        "Completado": this.tareasPorColumna["Completado"].filter((tarea) =>
           this.filtroPrioridades.includes(tarea.prioridad)
         ),
       };
@@ -270,7 +270,7 @@ export default {
           fechaCreacion,
           mostrarDetalles: false,
           editando: false, // Asegurar que la tarea no esté en modo edición
-          columna: "To Do",
+          columna: "Por hacer",
         });
         this.nuevaTarea = {
           texto: "",
