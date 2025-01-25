@@ -16,7 +16,6 @@ export default {
   },
   methods: {
     guardarTareas() {
-      // Antes de guardar, eliminamos `editando` para evitar guardar estados temporales
       const tareasSinEditando = this.tareas.map((tarea) => ({
         ...tarea,
         editando: false,

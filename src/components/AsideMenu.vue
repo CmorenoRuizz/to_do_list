@@ -12,22 +12,7 @@
       <ul class="list-group list-group-flush flex-grow-1">
         <li class="list-group-item">
           <a href="#" class="d-flex align-items-center">
-            <i class="bi bi-plus-circle me-2"></i> Crear Nuevo Proyecto
-          </a>
-        </li>
-        <li class="list-group-item">
-          <a href="#" class="d-flex align-items-center">
-            <i class="bi bi-folder me-2"></i> Mis Proyectos
-          </a>
-        </li>
-        <li class="list-group-item">
-          <a href="#" class="d-flex align-items-center">
             <i class="bi bi-gear me-2"></i> Configuración
-          </a>
-        </li>
-        <li class="list-group-item">
-          <a href="#" class="d-flex align-items-center">
-            <i class="bi bi-life-preserver me-2"></i> Soporte
           </a>
         </li>
       </ul>
@@ -51,7 +36,6 @@ export default {
       this.asideOpen = !this.asideOpen;
     },
     cerrarSesion() {
-      // Logic to handle session closing
       console.log("Cerrar Sesión");
     },
   },
