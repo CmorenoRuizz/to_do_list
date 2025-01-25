@@ -1,14 +1,26 @@
 <template>
+  <!-- Navbar modificado -->
+  <nav class="navbar navbar-expand-lg navbar-slim" :class="modoOscuro ? 'navbar-dark bg-dark' : 'navbar-light bg-light'">
+    <div class="container">
+      <span class="navbar-brand mt-2">ToDo List</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success mt-2" type="button">
+          Login
+        </button>
+        <button class="btn mt-2"
+          :class="modoOscuro ? 'btn-light text-dark' : 'btn-dark text-white'"
+          @click="toggleDarkMode">
+          {{ modoOscuro ? "Modo Claro" : "Modo Oscuro" }}
+        </button>
+      </div>
+    </div>
+  </nav>
+
   <div class="container mt-5">
     <h1 class="text-center mb-4">Lista de tareas pendientes</h1>
 
     <div class="d-flex justify-content-center gap-2 mb-3">
-      <!-- Botón para alternar modo oscuro -->
-      <button class="btn btn-secondary" @click="toggleDarkMode">
-        {{ modoOscuro ? "Modo Claro" : "Modo Oscuro" }}
-      </button>
-
-      <!-- Botón para mostrar/ocultar formulario -->
+      <!-- Eliminado el botón de modo oscuro de aquí -->
       <button class="btn btn-primary" @click="toggleFormulario">
         {{ mostrarFormulario ? "Ocultar formulario" : "Nueva tarea" }}
       </button>
@@ -121,6 +133,13 @@
       </div>
     </div>
   </div>
+
+  <!-- Footer modificado -->
+  <footer class="footer" :class="modoOscuro ? 'bg-dark text-white' : 'bg-light'">
+    <div class="footer-content">
+      <span>Hecho por Carlos y Adrián</span>
+    </div>
+  </footer>
 </template>
 
 <script>
@@ -314,4 +333,67 @@ export default {
 .hidden {
   display: none !important;
 }
+
+/* Nuevos estilos para el footer */
+.footer {
+  position: fixed; /* Cambiado de relative a fixed */
+  bottom: 0;
+  width: 100%;
+  padding: 1rem 0;
+  z-index: 1000;
+}
+
+/* Asegurar que el contenido principal no quede tapado por el footer */
+.container {
+  margin-bottom: 80px; /* Dar espacio para que el contenido no quede detrás del footer */
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#app {
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 60px; /* Altura del footer */
+}
+
+/* Estilos actualizados para el footer */
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 60px; /* Altura fija del footer */
+  z-index: 1000;
+}
+
+.footer-content {
+  height: 100%;
+  display: flex;
+  align-items: flex-end; /* Alinea el contenido al final */
+  justify-content: center;
+  padding-bottom: 10px; /* Espacio desde el borde inferior */
+}
+
+/* Añadir estilos para hacer el navbar más delgado */
+.navbar-slim {
+  padding-top: 0;
+  padding-bottom: 0;
+  min-height: 50px; /* Aumentado ligeramente para dar más espacio */
+}
+
+.navbar-slim .navbar-brand {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-bottom: 8px; /* Añadir margen inferior para equilibrar */
+}
+
+.navbar-slim .btn {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  margin-bottom: 8px; /* Añadir margen inferior para equilibrar */
+}
+
+/* Resto de los estilos permanecen igual */
 </style>
