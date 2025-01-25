@@ -4,8 +4,11 @@
     <div class="container">
       <span class="navbar-brand mt-2">ToDo List</span>
       <div class="d-flex gap-2">
-        <button class="btn btn-success mt-2" type="button">
+        <button v-if="!currentUser" class="btn btn-success mt-2" @click="$router.push('/login')">
           Login
+        </button>
+        <button v-else class="btn btn-danger mt-2" @click="logout">
+          Logout ({{ currentUser }})
         </button>
         <button class="btn mt-2"
           :class="modoOscuro ? 'btn-light text-dark' : 'btn-dark text-white'"
@@ -153,6 +156,7 @@ export default {
   },
   data() {
     return {
+      currentUser: localStorage.getItem('currentUser') || null,
       // Asegurarse de que `editando` sea false para todas las tareas cargadas
       tareas: JSON.parse(localStorage.getItem("tareas"))?.map((tarea) => ({
         ...tarea,
@@ -181,6 +185,17 @@ export default {
     // Aplicar el modo oscuro al cargar la página si estaba activo
     if (this.modoOscuro) {
       document.body.classList.add('bg-dark', 'text-white');
+    }
+    if (this.currentUser) {
+      const userTasks = localStorage.getItem(`tareas_${this.currentUser}`);
+      if (userTasks) {
+        this.tareas = JSON.parse(userTasks).map(tarea => ({
+          ...tarea,
+          editando: false
+        }));
+      }
+    } else {
+      this.$router.push('/login');
     }
   },
   computed: {
@@ -303,8 +318,13 @@ export default {
         ...tarea,
         editando: false,
       }));
-      localStorage.setItem("tareas", JSON.stringify(tareasSinEditando));
+      localStorage.setItem(`tareas_${this.currentUser}`, JSON.stringify(tareasSinEditando));
     },
+    logout() {
+      localStorage.removeItem('currentUser');
+      this.currentUser = null;
+      this.$router.push('/login');
+    }
   },
 };
 </script>
